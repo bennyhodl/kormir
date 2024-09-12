@@ -1,7 +1,7 @@
 use bitcoin::secp256k1::schnorr::Signature;
 use diesel::prelude::*;
 use dlc_messages::oracle_msgs::OracleEvent;
-use lightning::util::ser::Readable;
+use kormir::lightning::util::ser::Readable;
 use nostr::EventId;
 use serde::{Deserialize, Serialize};
 
@@ -59,7 +59,7 @@ impl Event {
     }
 
     pub fn oracle_event(&self) -> OracleEvent {
-        let mut cursor = std::io::Cursor::new(&self.oracle_event);
+        let mut cursor = kormir::lightning::io::Cursor::new(&self.oracle_event);
         OracleEvent::read(&mut cursor).expect("invalid oracle event")
     }
 

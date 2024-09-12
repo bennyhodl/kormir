@@ -9,7 +9,7 @@ use diesel_migrations::{embed_migrations, EmbeddedMigrations};
 use dlc_messages::oracle_msgs::{EventDescriptor, OracleAnnouncement};
 use kormir::error::Error;
 use kormir::storage::{OracleEventData, Storage};
-use lightning::util::ser::Writeable;
+use kormir::lightning::util::ser::Writeable;
 use nostr::EventId;
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicU32, Ordering};

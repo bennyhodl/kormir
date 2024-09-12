@@ -1,6 +1,6 @@
 [package]
 name = "kormir-server"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2021"
 authors = ["benthecarman <ben@mutinywallet.com>"]
 description = "DLC Oracle RPC Server"
@@ -10,18 +10,18 @@ homepage = "https://github.com/benthecarman/kormir"
 repository = "https://github.com/benthecarman/kormir"
 
 [dependencies]
-kormir = { path = "../kormir", version = "0.2.0", features = ["nostr"] }
+kormir = { path = "../kormir", version = "0.3.0", features = ["nostr"] }
 
 anyhow = "1.0"
 axum = { version = "0.6.16", features = ["headers"] }
-bitcoin = { version = "0.30.2", features = ["serde"] }
+bitcoin = { version = "0.32.2", features = ["serde"] }
 chrono = { version = "0.4.26", features = ["serde"] }
 diesel = { version = "2.1", features = ["postgres", "r2d2", "chrono", "numeric"] }
 diesel_migrations = "2.1.0"
-dlc-messages = "0.5.0"
+# dlc-messages = "0.5.0"
+dlc-messages = { version = "0.6.0", git = "https://github.com/bennyhodl/rust-dlc", branch = "better-error-messages", features = [ "use-serde"] }
 dotenv = "0.15.0"
 futures = "0.3.28"
-lightning = "0.0.121"
 log = "0.4.20"
 nostr = "0.29.1"
 nostr-sdk = "0.29.0"

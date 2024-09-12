@@ -3,7 +3,7 @@ use axum::http::StatusCode;
 use axum::{Extension, Json};
 use bitcoin::key::XOnlyPublicKey;
 use kormir::storage::{OracleEventData, Storage};
-use lightning::util::ser::Writeable;
+use kormir::lightning::util::ser::Writeable;
 use nostr::{EventId, JsonUtil};
 use serde::Deserialize;
 use std::time::SystemTime;

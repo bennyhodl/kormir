@@ -9,10 +9,10 @@ use crate::error::Error;
 use crate::storage::Storage;
 use bitcoin::hashes::{sha256, Hash};
 use bitcoin::secp256k1::{All, Message, Secp256k1, SecretKey};
-use bitcoin::bip32::{ChildNumber, DerivationPath, ExtendedPrivKey};
+use bitcoin::bip32::{ChildNumber, DerivationPath, Xpriv};
 use bitcoin::Network;
 use bitcoin::key::XOnlyPublicKey;
-use secp256k1_zkp::KeyPair;
+use secp256k1_zkp::Keypair;
 use std::collections::HashMap;
 use std::str::FromStr;
 
@@ -32,23 +32,23 @@ const SIGNING_KEY_PATH: &str = "m/86'/0'/0'/0/0";
 #[derive(Debug, Clone)]
 pub struct Oracle<S: Storage> {
     pub storage: S,
-    key_pair: KeyPair,
-    nonce_xpriv: ExtendedPrivKey,
+    key_pair: Keypair,
+    nonce_xpriv: Xpriv,
     secp: Secp256k1<All>,
 }
 
 impl<S: Storage> Oracle<S> {
-    pub fn new(storage: S, signing_key: SecretKey, nonce_xpriv: ExtendedPrivKey) -> Self {
+    pub fn new(storage: S, signing_key: SecretKey, nonce_xpriv: Xpriv) -> Self {
         let secp = Secp256k1::new();
         Self {
             storage,
-            key_pair: KeyPair::from_secret_key(&secp, &signing_key),
+            key_pair: Keypair::from_secret_key(&secp, &signing_key),
             nonce_xpriv,
             secp,
         }
     }
 
-    pub fn from_xpriv(storage: S, xpriv: ExtendedPrivKey) -> Result<Self, Error> {
+    pub fn from_xpriv(storage: S, xpriv: Xpriv) -> Result<Self, Error> {
         let secp = Secp256k1::new();
 
         let signing_key = derive_signing_key(&secp, xpriv)?;
@@ -59,12 +59,12 @@ impl<S: Storage> Oracle<S> {
         let secp = Secp256k1::new();
 
         let xpriv_bytes = sha256::Hash::hash(&signing_key.secret_bytes()).to_byte_array();
-        let nonce_xpriv = ExtendedPrivKey::new_master(Network::Bitcoin, &xpriv_bytes)
+        let nonce_xpriv = Xpriv::new_master(Network::Bitcoin, &xpriv_bytes)
             .map_err(|_| Error::Internal)?;
 
         Ok(Self {
             storage,
-            key_pair: KeyPair::from_secret_key(&secp, &signing_key),
+            key_pair: Keypair::from_secret_key(&secp, &signing_key),
             nonce_xpriv,
             secp,
         })
@@ -118,7 +118,8 @@ impl<S: Storage> Oracle<S> {
         // create signature
         let mut data = Vec::new();
         oracle_event.write(&mut data).map_err(|_| Error::Internal)?;
-        let msg = Message::from_hashed_data::<sha256::Hash>(&data);
+        let hash = sha256::Hash::hash(&data);
+        let msg = Message::from_digest(hash.to_byte_array());
         let announcement_signature = self.secp.sign_schnorr_no_aux_rand(&msg, &self.key_pair);
 
         let ann = OracleAnnouncement {
@@ -158,7 +159,8 @@ impl<S: Storage> Oracle<S> {
         let nonce_index = data.indexes.first().expect("Already checked length");
         let nonce_key = self.get_nonce_key(*nonce_index);
 
-        let msg = Message::from_hashed_data::<sha256::Hash>(outcome.as_bytes());
+        let hash = sha256::Hash::hash(outcome.as_bytes());
+        let msg = Message::from_digest(hash.to_byte_array());
 
         let sig = dlc::secp_utils::schnorrsig_sign_with_nonce(
             &self.secp,
@@ -196,7 +198,7 @@ impl<S: Storage> Oracle<S> {
 
 pub fn derive_signing_key(
     secp: &Secp256k1<All>,
-    xpriv: ExtendedPrivKey,
+    xpriv: Xpriv,
 ) -> Result<SecretKey, Error> {
     let signing_key = xpriv
         .derive_priv(
@@ -218,7 +220,7 @@ mod test {
     fn create_oracle() -> Oracle<MemoryStorage> {
         let mut seed: [u8; 64] = [0; 64];
         thread_rng().fill(&mut seed);
-        let xpriv = ExtendedPrivKey::new_master(Network::Regtest, &seed).unwrap();
+        let xpriv = Xpriv::new_master(Network::Regtest, &seed).unwrap();
         Oracle::from_xpriv(MemoryStorage::default(), xpriv).unwrap()
     }
 

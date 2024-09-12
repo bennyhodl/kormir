@@ -153,14 +153,14 @@ impl Kormir {
 
     pub async fn decode_announcement(str: String) -> Result<Announcement, JsError> {
         let bytes = hex::decode(str)?;
-        let mut cursor = std::io::Cursor::new(&bytes);
+        let mut cursor = kormir::lightning::io::Cursor::new(&bytes);
         let ann = OracleAnnouncement::read(&mut cursor)?;
         Ok(ann.into())
     }
 
     pub async fn decode_attestation(str: String) -> Result<Attestation, JsError> {
         let bytes = hex::decode(str)?;
-        let mut cursor = std::io::Cursor::new(&bytes);
+        let mut cursor = kormir::lightning::io::Cursor::new(&bytes);
         let attestation = OracleAttestation::read(&mut cursor)?;
         Ok(attestation.into())
     }

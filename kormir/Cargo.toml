@@ -15,8 +15,8 @@ nostr = ["dep:nostr", "dep:base64"]
 
 [dependencies]
 bitcoin = { version = "0.32.2", features = ["serde"] }
-dlc = { version = "0.6.0", git = "https://github.com/p2pderivatives/rust-dlc", branch = "master", features = ["use-serde"] }
-dlc-messages = { version = "0.6.0", git = "https://github.com/p2pderivatives/rust-dlc", branch = "master", features = [ "use-serde"] }
+dlc = { version = "0.6.0", git = "https://github.com/bennyhodl/rust-dlc", branch = "async", features = ["use-serde"] }
+dlc-messages = { version = "0.6.0", git = "https://github.com/bennyhodl/rust-dlc", branch = "async", features = [ "use-serde"] }
 lightning = "0.0.124"
 log = "0.4.22"
 nostr = { version = "0.29.1", optional = true }

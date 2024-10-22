@@ -617,7 +617,7 @@ dependencies = [
 [[package]]
 name = "dlc"
 version = "0.6.0"
-source = "git+https://github.com/p2pderivatives/rust-dlc?branch=master#c8ec7bd317eafc22a3a5dc1e2f837307f7aae449"
+source = "git+https://github.com/bennyhodl/rust-dlc?branch=async#a52460926263717610424a170eef0d25c286059e"
 dependencies = [
  "bitcoin 0.32.2",
  "miniscript",
@@ -629,7 +629,7 @@ dependencies = [
 [[package]]
 name = "dlc-messages"
 version = "0.6.0"
-source = "git+https://github.com/p2pderivatives/rust-dlc?branch=master#c8ec7bd317eafc22a3a5dc1e2f837307f7aae449"
+source = "git+https://github.com/bennyhodl/rust-dlc?branch=async#a52460926263717610424a170eef0d25c286059e"
 dependencies = [
  "bitcoin 0.32.2",
  "dlc",

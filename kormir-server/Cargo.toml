@@ -13,7 +13,11 @@ repository = "https://github.com/bennyhodl/kormir"
 kormir = { path = "../kormir", version = "0.4.0", features = ["nostr"] }
 
 anyhow = "1.0"
-axum = { version = "0.6.16", features = ["headers"] }
+axum = "0.7.9"
+http-body-util = "0.1.0"
+hyper = "1.5.2"
+tower = "0.5.2"
+tower-http = { version = "0.6.2", features = ["timeout", "trace","map-request-body", "util"] }
 bitcoin = { version = "0.32.2", features = ["serde"] }
 chrono = { version = "0.4.26", features = ["serde"] }
 diesel = { version = "2.1", features = ["postgres", "r2d2", "chrono", "numeric"] }
@@ -30,3 +34,5 @@ serde = { version = "^1.0", features = ["derive"] }
 serde_json = "1.0.67"
 tokio = { version = "1.12.0", features = ["full"] }
 hex = "0.4.3"
+hmac = "0.12.1"            # HMAC implementation
+sha2 = "0.10"            # SHA2 hash function (commonly used with HMAC)

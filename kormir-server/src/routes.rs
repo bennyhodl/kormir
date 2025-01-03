@@ -1,4 +1,4 @@
-use crate::State;
+use crate::AppState;
 use axum::extract::Path;
 use axum::extract::Query;
 use axum::http::StatusCode;
@@ -19,14 +19,14 @@ pub async fn health_check() -> Result<Json<()>, (StatusCode, String)> {
 }
 
 pub async fn get_pubkey(
-    Extension(state): Extension<State>,
+    Extension(state): Extension<AppState>,
 ) -> Result<Json<XOnlyPublicKey>, (StatusCode, String)> {
     Ok(Json(state.oracle.public_key()))
 }
 
 pub async fn list_events(
     Query(params): Query<HashMap<String, String>>,
-    Extension(state): Extension<State>,
+    Extension(state): Extension<AppState>,
 ) -> Result<Json<Value>, (StatusCode, String)> {
     let events = state.oracle.storage.list_events().await.map_err(|_| {
         (
@@ -57,7 +57,7 @@ pub struct CreateEnumEvent {
     pub event_maturity_epoch: u32,
 }
 
-async fn create_enum_event_impl(state: &State, body: CreateEnumEvent) -> anyhow::Result<String> {
+async fn create_enum_event_impl(state: &AppState, body: CreateEnumEvent) -> anyhow::Result<String> {
     let ann = state
         .oracle
         .create_enum_event(
@@ -100,7 +100,7 @@ async fn create_enum_event_impl(state: &State, body: CreateEnumEvent) -> anyhow:
 }
 
 pub async fn create_enum_event(
-    Extension(state): Extension<State>,
+    Extension(state): Extension<AppState>,
     Json(body): Json<CreateEnumEvent>,
 ) -> Result<Json<String>, (StatusCode, String)> {
     if body.outcomes.is_empty() {
@@ -135,7 +135,7 @@ pub struct SignEnumEvent {
     pub outcome: String,
 }
 
-async fn sign_enum_event_impl(state: &State, body: SignEnumEvent) -> anyhow::Result<String> {
+async fn sign_enum_event_impl(state: &AppState, body: SignEnumEvent) -> anyhow::Result<String> {
     let att = state
         .oracle
         .sign_enum_event(body.event_id.clone(), body.outcome)
@@ -178,7 +178,7 @@ async fn sign_enum_event_impl(state: &State, body: SignEnumEvent) -> anyhow::Res
 }
 
 pub async fn sign_enum_event(
-    Extension(state): Extension<State>,
+    Extension(state): Extension<AppState>,
     Json(body): Json<SignEnumEvent>,
 ) -> Result<Json<String>, (StatusCode, String)> {
     match sign_enum_event_impl(&state, body).await {
@@ -204,7 +204,7 @@ pub struct CreateNumericEvent {
 }
 
 async fn create_numeric_event_impl(
-    state: &State,
+    state: &AppState,
     body: crate::routes::CreateNumericEvent,
 ) -> anyhow::Result<String> {
     let ann = state
@@ -252,7 +252,7 @@ async fn create_numeric_event_impl(
 }
 
 pub async fn create_numeric_event(
-    Extension(state): Extension<State>,
+    Extension(state): Extension<AppState>,
     Json(body): Json<crate::routes::CreateNumericEvent>,
 ) -> Result<Json<String>, (StatusCode, String)> {
     if body.num_digits.is_some() && body.num_digits.unwrap() == 0 {
@@ -282,7 +282,7 @@ pub async fn create_numeric_event(
 }
 
 pub async fn get_oracle_announcement_impl(
-    state: &State,
+    state: &AppState,
     event_id: String,
 ) -> anyhow::Result<OracleAnnouncement> {
     if let Some(event) = state.oracle.storage.get_event(event_id).await? {
@@ -295,7 +295,7 @@ pub async fn get_oracle_announcement_impl(
 }
 
 pub async fn get_oracle_announcement(
-    Extension(state): Extension<State>,
+    Extension(state): Extension<AppState>,
     Path(event_id): Path<String>,
 ) -> Result<Json<OracleAnnouncement>, (StatusCode, String)> {
     match crate::routes::get_oracle_announcement_impl(&state, event_id).await {
@@ -311,7 +311,7 @@ pub async fn get_oracle_announcement(
 }
 
 pub async fn get_oracle_attestation_impl(
-    state: &State,
+    state: &AppState,
     event_id: String,
 ) -> anyhow::Result<OracleAttestation> {
     let Some(event) = state.oracle.storage.get_event(event_id.clone()).await? else {
@@ -339,7 +339,7 @@ pub async fn get_oracle_attestation_impl(
 }
 
 pub async fn get_oracle_attestation(
-    Extension(state): Extension<State>,
+    Extension(state): Extension<AppState>,
     Path(event_id): Path<String>,
 ) -> Result<Json<OracleAttestation>, (StatusCode, String)> {
     match crate::routes::get_oracle_attestation_impl(&state, event_id).await {
@@ -361,7 +361,7 @@ pub struct SignNumericEvent {
 }
 
 async fn sign_numeric_event_impl(
-    state: &State,
+    state: &AppState,
     body: crate::routes::SignNumericEvent,
 ) -> anyhow::Result<String> {
     let att = state
@@ -406,7 +406,7 @@ async fn sign_numeric_event_impl(
 }
 
 pub async fn sign_numeric_event(
-    Extension(state): Extension<State>,
+    Extension(state): Extension<AppState>,
     Json(body): Json<crate::routes::SignNumericEvent>,
 ) -> Result<Json<String>, (StatusCode, String)> {
     match crate::routes::sign_numeric_event_impl(&state, body).await {

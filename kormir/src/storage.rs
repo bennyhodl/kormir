@@ -1,6 +1,6 @@
 use crate::error::Error;
 use bitcoin::secp256k1::schnorr::Signature;
-use dlc_messages::oracle_msgs::OracleAnnouncement;
+use dlc_messages::oracle_msgs::{OracleAnnouncement, OracleAttestation};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicU32, Ordering};
@@ -40,6 +40,21 @@ pub struct OracleEventData {
     pub announcement_event_id: Option<String>,
     #[cfg(feature = "nostr")]
     pub attestation_event_id: Option<String>,
+}
+
+impl OracleEventData {
+    pub fn attestation(&self) -> Option<OracleAttestation> {
+        if self.signatures.is_empty() {
+            None
+        } else {
+            Some(OracleAttestation {
+                event_id: self.announcement.oracle_event.event_id.clone(),
+                oracle_public_key: self.announcement.oracle_public_key,
+                signatures: self.signatures.iter().map(|x| x.1).collect(),
+                outcomes: self.signatures.iter().map(|x| x.0.clone()).collect(),
+            })
+        }
+    }
 }
 
 #[derive(Debug, Clone)]

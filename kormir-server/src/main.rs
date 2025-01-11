@@ -22,6 +22,7 @@ use std::time::Duration;
 use tokio::signal;
 use tower_http::timeout::TimeoutLayer;
 
+mod json_models;
 mod models;
 mod routes;
 

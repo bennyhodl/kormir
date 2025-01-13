@@ -1,22 +1,32 @@
 use crate::models::oracle_metadata::OracleMetadata;
 use crate::models::{PostgresStorage, MIGRATIONS};
 use crate::routes::*;
+use axum::extract::State;
 use axum::http::{StatusCode, Uri};
 use axum::routing::{get, post};
+use axum::{body::Body, extract::Request};
+use axum::{middleware, response::IntoResponse};
+use axum::{middleware::Next, response::Response};
 use axum::{Extension, Router};
 use bitcoin::secp256k1::{Secp256k1, SecretKey};
 use diesel::r2d2::{ConnectionManager, Pool};
 use diesel::PgConnection;
 use diesel_migrations::MigrationHarness;
+use hmac::{Hmac, Mac};
+use http_body_util::BodyExt;
 use kormir::Oracle;
 use nostr::Keys;
 use nostr_sdk::Client;
+use sha2::Sha256;
+use std::time::Duration;
+use tokio::signal;
+use tower_http::timeout::TimeoutLayer;
 
 mod models;
 mod routes;
 
 #[derive(Clone)]
-pub struct State {
+pub struct AppState {
     oracle: Oracle<PostgresStorage>,
     client: Client,
 }
@@ -83,47 +93,136 @@ async fn main() -> anyhow::Result<()> {
         .map(|s| s.to_string())
         .collect::<Vec<_>>();
 
+    let hmac_secret = {
+        let val = std::env::var("KORMIR_HMAC_SECRET").expect("KORMIR_HMAC_SECRET must be set");
+        if val.to_lowercase() == "none" {
+            None
+        } else {
+            Some(val.as_bytes().to_vec())
+        }
+    };
+
     let client = Client::new(oracle.nostr_keys());
     client.add_relays(relays).await?;
     client.connect().await;
 
-    let state = State { oracle, client };
+    let app_state = AppState { oracle, client };
 
     let addr: std::net::SocketAddr = format!("0.0.0.0:{port}")
         .parse()
         .expect("Failed to parse bind/port for webserver");
 
     let server_router = Router::new()
-        .route("/health-check", get(health_check))
-        .route("/pubkey", get(get_pubkey))
-        .route("/list-events", get(list_events))
-        .route("/announcement/:event_id", get(get_oracle_announcement))
-        .route("/attestation/:event_id", get(get_oracle_attestation))
-        .route("/create-enum", post(create_enum_event))
-        .route("/sign-enum", post(sign_enum_event))
-        .route("/create-numeric", post(create_numeric_event))
-        .route("/sign-numeric", post(sign_numeric_event))
+        .merge(
+            Router::new()
+                .route("/health-check", get(health_check))
+                .route("/pubkey", get(get_pubkey))
+                .route("/list-events", get(list_events))
+                .route("/announcement/:event_id", get(get_oracle_announcement))
+                .route("/attestation/:event_id", get(get_oracle_attestation)),
+        )
+        .merge(
+            Router::new()
+                .route("/create-enum", post(create_enum_event))
+                .route("/create-numeric", post(create_numeric_event))
+                .route("/sign-enum", post(sign_enum_event))
+                .route("/sign-numeric", post(sign_numeric_event))
+                .layer(middleware::from_fn_with_state(
+                    hmac_secret,
+                    verify_hmac_signature,
+                )),
+        )
         .fallback(fallback)
-        .layer(Extension(state));
+        .layer(TimeoutLayer::new(Duration::from_secs(10)))
+        .layer(Extension(app_state));
 
-    let server = axum::Server::bind(&addr).serve(server_router.into_make_service());
+    let listener = tokio::net::TcpListener::bind(&addr).await?;
 
-    println!("Webserver running on http://{addr}");
+    println!("Kormir server running on http://{addr}");
 
-    let graceful = server.with_graceful_shutdown(async {
-        tokio::signal::ctrl_c()
-            .await
-            .expect("failed to create Ctrl+C shutdown signal");
-    });
-
-    // Await the server to receive the shutdown signal
-    if let Err(e) = graceful.await {
-        eprintln!("shutdown error: {e}");
-    }
+    axum::serve(listener, server_router)
+        .with_graceful_shutdown(shutdown_signal())
+        .await?;
 
     Ok(())
 }
 
+async fn shutdown_signal() {
+    let ctrl_c = async {
+        signal::ctrl_c()
+            .await
+            .expect("failed to install Ctrl+C handler");
+    };
+
+    #[cfg(unix)]
+    let terminate = async {
+        signal::unix::signal(signal::unix::SignalKind::terminate())
+            .expect("failed to install signal handler")
+            .recv()
+            .await;
+    };
+
+    #[cfg(not(unix))]
+    let terminate = std::future::pending::<()>();
+
+    tokio::select! {
+        _ = ctrl_c => {},
+        _ = terminate => {},
+    }
+}
+
 async fn fallback(uri: Uri) -> (StatusCode, String) {
     (StatusCode::NOT_FOUND, format!("No route for {uri}"))
+}
+
+async fn verify_hmac_signature(
+    State(hmac_secret): State<Option<Vec<u8>>>,
+    req: Request,
+    next: Next,
+) -> Result<impl IntoResponse, Response> {
+    match hmac_secret {
+        None => Ok(next.run(req).await),
+        Some(secret) => {
+            let (parts, body_parts) = req.into_parts();
+
+            match parts.headers.get("X-Signature") {
+                Some(signature_header) => {
+                    let sig = std::str::from_utf8(signature_header.as_bytes())
+                        .map_err(|_| internal_server_error("invalid signature"))?;
+
+                    let bytes = body_parts
+                        .collect()
+                        .await
+                        .map_err(|_| internal_server_error("invalid request body"))?
+                        .to_bytes();
+
+                    let expected_sig = calculate_hmac(&bytes, &secret)
+                        .map_err(|_| internal_server_error("error calculating HMAC"))?;
+
+                    if sig == expected_sig {
+                        let req = Request::from_parts(parts, Body::from(bytes));
+                        Ok(next.run(req).await)
+                    } else {
+                        Err(unauthorized("wrong signature"))
+                    }
+                }
+                None => Err(unauthorized("missing signature")),
+            }
+        }
+    }
+}
+
+fn calculate_hmac(payload: &[u8], secret: &[u8]) -> Result<String, ()> {
+    let mut mac = Hmac::<Sha256>::new_from_slice(secret).map_err(|_| ())?;
+    mac.update(payload);
+    let result = mac.finalize().into_bytes();
+    Ok(hex::encode(result))
+}
+
+fn internal_server_error(msg: &'static str) -> Response {
+    (StatusCode::INTERNAL_SERVER_ERROR, msg).into_response()
+}
+
+fn unauthorized(msg: &'static str) -> Response {
+    (StatusCode::UNAUTHORIZED, msg).into_response()
 }

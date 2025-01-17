@@ -185,16 +185,10 @@ impl From<(String, OracleEventData)> for EventData {
             }
         };
 
-        let (attestation, observed_outcome) = match value.signatures.len() {
-            0 => (None, None),
-            _ => {
+        let (attestation, observed_outcome) = match value.attestation() {
+            None => (None, None),
+            Some(attestation) => {
                 // todo proper sorting for non-enum events
-                let attestation = OracleAttestation {
-                    event_id: value.announcement.oracle_event.event_id.clone(),
-                    oracle_public_key: value.announcement.oracle_public_key,
-                    signatures: value.signatures.iter().map(|x| x.1).collect(),
-                    outcomes: value.signatures.iter().map(|x| x.0.clone()).collect(),
-                };
                 let attestation = hex::encode(attestation.encode());
                 let outcome = match &value.announcement.oracle_event.event_descriptor {
                     EventDescriptor::EnumEvent(_) => {

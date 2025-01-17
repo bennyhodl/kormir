@@ -1,4 +1,5 @@
 use anyhow::anyhow;
+use bitcoin::XOnlyPublicKey;
 use chrono::{SecondsFormat, TimeZone, Utc};
 use dlc_messages::oracle_msgs::{OracleAnnouncement, OracleAttestation};
 use dlc_messages::ser_impls::write_as_tlv;
@@ -6,6 +7,11 @@ use kormir::lightning::util::ser::Writeable;
 use kormir::storage::OracleEventData;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+
+#[derive(Debug, Clone, Serialize)]
+pub struct PubkeyResponse {
+    pub pubkey: XOnlyPublicKey,
+}
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct CreateEnumEventRequest {

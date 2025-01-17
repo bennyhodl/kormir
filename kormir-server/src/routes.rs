@@ -5,7 +5,6 @@ use axum::extract::Path;
 use axum::extract::Query;
 use axum::http::StatusCode;
 use axum::{Extension, Json};
-use bitcoin::key::XOnlyPublicKey;
 use dlc_messages::oracle_msgs::OracleAnnouncement;
 use kormir::storage::{OracleEventData, Storage};
 use kormir::OracleAttestation;
@@ -20,8 +19,10 @@ pub async fn health_check() -> Result<Json<()>, (StatusCode, String)> {
 
 pub async fn get_pubkey(
     Extension(state): Extension<AppState>,
-) -> Result<Json<XOnlyPublicKey>, (StatusCode, String)> {
-    Ok(Json(state.oracle.public_key()))
+) -> Result<Json<PubkeyResponse>, (StatusCode, String)> {
+    Ok(Json(PubkeyResponse {
+        pubkey: state.oracle.public_key(),
+    }))
 }
 
 pub async fn list_events(

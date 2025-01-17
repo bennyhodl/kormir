@@ -1,6 +1,6 @@
 [package]
 name = "kormir-server"
-version = "0.3.3"
+version = "0.3.4"
 edition = "2021"
 authors = ["benthecarman <ben@mutinywallet.com>", "benny b <ben@bitcoinbay.foundation>"]
 description = "DLC Oracle RPC Server"
@@ -10,7 +10,7 @@ homepage = "https://github.com/bennyhodl/kormir"
 repository = "https://github.com/bennyhodl/kormir"
 
 [dependencies]
-kormir = { path = "../kormir", version = "0.4.0", features = ["nostr"] }
+kormir = { path = "../kormir", version = "0.4.2", features = ["nostr"] }
 
 anyhow = "1.0"
 axum = "0.7.9"

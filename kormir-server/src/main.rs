@@ -61,7 +61,7 @@ async fn main() -> anyhow::Result<()> {
 
     let secp = Secp256k1::new();
     let kormir_key = &std::env::var("KORMIR_KEY").expect("KORMIR_KEY must be set");
-    let secret_bytes = Keys::parse(kormir_key)?.secret_key()?.secret_bytes();
+    let secret_bytes = Keys::parse(kormir_key)?.secret_key().secret_bytes();
     let signing_key = SecretKey::from_slice(&secret_bytes)?;
 
     let pubkey = signing_key.x_only_public_key(&secp).0;
@@ -104,7 +104,9 @@ async fn main() -> anyhow::Result<()> {
     };
 
     let client = Client::new(oracle.nostr_keys());
-    client.add_relays(relays).await?;
+    for relay in relays {
+        client.add_relay(relay).await?;
+    }
     client.connect().await;
 
     let app_state = AppState { oracle, client };

@@ -124,16 +124,7 @@ async fn create_enum_event_impl(
 
     log::info!("Created enum event: {}", &ann.oracle_event.event_id);
 
-    let relays = state
-        .client
-        .relays()
-        .await
-        .keys()
-        .map(|x| x.to_string())
-        .collect::<Vec<_>>();
-
-    let event =
-        kormir::nostr_events::create_announcement_event(&state.oracle.nostr_keys(), &ann, &relays)?;
+    let event = kormir::nostr_events::create_announcement_event(&state.oracle.nostr_keys(), &ann)?;
 
     log::debug!("Broadcasting nostr event: {}", event.as_json());
 
@@ -256,16 +247,7 @@ async fn create_numeric_event_impl(
 
     log::info!("Created numeric event: {}", &ann.oracle_event.event_id);
 
-    let relays = state
-        .client
-        .relays()
-        .await
-        .keys()
-        .map(|x| x.to_string())
-        .collect::<Vec<_>>();
-
-    let event =
-        kormir::nostr_events::create_announcement_event(&state.oracle.nostr_keys(), &ann, &relays)?;
+    let event = kormir::nostr_events::create_announcement_event(&state.oracle.nostr_keys(), &ann)?;
 
     log::debug!("Broadcasting nostr event: {}", event.as_json());
 
@@ -357,7 +339,7 @@ async fn sign_numeric_event_impl(
 fn get_event_id(data: Option<OracleEventData>) -> Result<EventId, Error> {
     data.and_then(|d| {
         d.announcement_event_id
-            .and_then(|s| EventId::from_hex(s).ok())
+            .and_then(|s| EventId::from_hex(&s).ok())
     })
     .ok_or_else(|| anyhow::anyhow!("Failed to get announcement event id"))
 }

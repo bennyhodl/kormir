@@ -25,7 +25,6 @@ pub struct Kormir {
     oracle: Oracle<IndexedDb>,
     storage: IndexedDb,
     client: Client,
-    relays: Vec<String>,
 }
 
 #[wasm_bindgen]
@@ -52,14 +51,15 @@ impl Kormir {
         let oracle = Oracle::from_signing_key(storage.clone(), nsec)?;
 
         let client = Client::new(oracle.nostr_keys());
-        client.add_relays(relays.iter().map(|r| r.as_str())).await?;
+        for relay in &relays {
+            client.add_relay(relay.as_str()).await?;
+        }
         client.connect().await;
 
         Ok(Kormir {
             oracle,
             storage,
             client,
-            relays,
         })
     }
 
@@ -69,10 +69,7 @@ impl Kormir {
         let storage = IndexedDb::new().await?;
 
         storage
-            .save_to_indexed_db(
-                NSEC_KEY,
-                hex::encode(nsec.secret_key().expect("just imported").secret_bytes()),
-            )
+            .save_to_indexed_db(NSEC_KEY, hex::encode(nsec.secret_key().secret_bytes()))
             .await?;
 
         Ok(())
@@ -97,11 +94,9 @@ impl Kormir {
 
         log::info!("Created enum event: {hex}");
 
-        let event = kormir::nostr_events::create_announcement_event(
-            &self.oracle.nostr_keys(),
-            &ann,
-            &self.relays,
-        )?;
+        let event =
+            kormir::nostr_events::create_announcement_event(&self.oracle.nostr_keys(), &ann)
+                .map_err(|_| JsError::Nostr)?;
 
         log::debug!("Created nostr event: {}", event.as_json());
 
@@ -136,13 +131,14 @@ impl Kormir {
             .get_event(event_id.clone())
             .await?
             .ok_or(JsError::NotFound)?;
-        let nostr_event_id = EventId::from_hex(event.announcement_event_id.unwrap()).unwrap();
+        let nostr_event_id = EventId::from_hex(&event.announcement_event_id.unwrap()).unwrap();
 
         let event = kormir::nostr_events::create_attestation_event(
             &self.oracle.nostr_keys(),
             &attestation,
             nostr_event_id,
-        )?;
+        )
+        .map_err(|_| JsError::Nostr)?;
 
         self.storage
             .add_attestation_event_id(event_id, event.id.to_hex())
@@ -178,11 +174,9 @@ impl Kormir {
 
         log::info!("Created numeric event: {hex}");
 
-        let event = kormir::nostr_events::create_announcement_event(
-            &self.oracle.nostr_keys(),
-            &ann,
-            &self.relays,
-        )?;
+        let event =
+            kormir::nostr_events::create_announcement_event(&self.oracle.nostr_keys(), &ann)
+                .map_err(|_| JsError::Nostr)?;
 
         log::debug!("Created nostr event: {}", event.as_json());
 
@@ -217,13 +211,14 @@ impl Kormir {
             .get_event(event_id.clone())
             .await?
             .ok_or(JsError::NotFound)?;
-        let nostr_event_id = EventId::from_hex(event.announcement_event_id.unwrap()).unwrap();
+        let nostr_event_id = EventId::from_hex(&event.announcement_event_id.unwrap()).unwrap();
 
         let event = kormir::nostr_events::create_attestation_event(
             &self.oracle.nostr_keys(),
             &attestation,
             nostr_event_id,
-        )?;
+        )
+        .map_err(|_| JsError::Nostr)?;
 
         self.storage
             .add_attestation_event_id(event_id, event.id.to_hex())

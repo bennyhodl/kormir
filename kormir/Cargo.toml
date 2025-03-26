@@ -1,6 +1,6 @@
 [package]
 name = "kormir"
-version = "0.4.2"
+version = "0.4.3"
 edition = "2021"
 authors = ["benthecarman <ben@mutinywallet.com>", "benny b <ben@bitcoinbay.foundation>"]
 description = "Oracle implementation for DLCs"

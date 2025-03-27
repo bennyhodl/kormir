@@ -109,7 +109,7 @@ impl Kormir {
             event.id.to_hex()
         );
 
-        self.client.send_event(event).await?;
+        self.client.send_event(&event).await?;
 
         log::trace!("Sent event to nostr");
 
@@ -144,7 +144,7 @@ impl Kormir {
             .add_attestation_event_id(event_id, event.id.to_hex())
             .await?;
 
-        self.client.send_event(event).await?;
+        self.client.send_event(&event).await?;
 
         Ok(hex::encode(attestation.encode()))
     }
@@ -189,7 +189,7 @@ impl Kormir {
             event.id.to_hex()
         );
 
-        self.client.send_event(event).await?;
+        self.client.send_event(&event).await?;
 
         log::trace!("Sent event to nostr");
 
@@ -224,7 +224,7 @@ impl Kormir {
             .add_attestation_event_id(event_id, event.id.to_hex())
             .await?;
 
-        self.client.send_event(event).await?;
+        self.client.send_event(&event).await?;
 
         Ok(hex::encode(attestation.encode()))
     }

@@ -139,7 +139,7 @@ async fn create_enum_event_impl(
         event.id.to_hex()
     );
 
-    state.client.send_event(event).await?;
+    state.client.send_event(&event).await?;
 
     Ok(ann)
 }
@@ -208,7 +208,7 @@ async fn sign_enum_event_impl(
         event.id.to_hex()
     );
 
-    state.client.send_event(event).await?;
+    state.client.send_event(&event).await?;
 
     Ok(att)
 }
@@ -262,7 +262,7 @@ async fn create_numeric_event_impl(
         event.id.to_hex()
     );
 
-    state.client.send_event(event).await?;
+    state.client.send_event(&event).await?;
 
     Ok(ann)
 }
@@ -331,7 +331,7 @@ async fn sign_numeric_event_impl(
         event.id.to_hex()
     );
 
-    state.client.send_event(event).await?;
+    state.client.send_event(&event).await?;
 
     Ok(att)
 }

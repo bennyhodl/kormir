@@ -15,10 +15,12 @@ nostr = ["dep:nostr", "dep:base64"]
 
 [dependencies]
 bitcoin = { version = "0.32.2", features = ["serde"] }
-dlc = { version = "0.7.1", features = ["use-serde"] }
-dlc-messages = { version = "0.7.1", features = [ "use-serde"] }
-# dlc = { version = "0.7.0", path = "../../rust-dlc/dlc", features = ["use-serde"] }
-# dlc-messages = { version = "0.7.0", path = "../../rust-dlc/dlc-messages", features = [ "use-serde"] }
+# dlc = { version = "0.7.1", features = ["use-serde"] }
+# dlc-messages = { version = "0.7.1", features = [ "use-serde"] }
+# dlc = { path = "../../dlcdevkit/dlc", features = ["use-serde"] }
+# dlc-messages = { path = "../../dlcdevkit/dlc-messages", features = [ "use-serde"] }
+dlc = { git = "https://github.com/bennyhodl/dlcdevkit", branch = "fork-rust-dlc-crates", features = ["use-serde"] }
+dlc-messages = { git = "https://github.com/bennyhodl/dlcdevkit", branch = "fork-rust-dlc-crates", features = [ "use-serde"] }
 lightning = "0.0.125"
 log = "0.4.22"
 nostr = { version = "0.40.0", optional = true }

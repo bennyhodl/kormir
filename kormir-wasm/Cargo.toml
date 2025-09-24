@@ -13,11 +13,9 @@ repository = "https://github.com/bennyhodl/kormir"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-kormir = { path = "../kormir", version = "0.4.2", features = ["nostr"] }
+kormir = { version = "1.0.8", features = ["nostr"] }
 
-anyhow = "1.0.75"
 bip39 = "2.0.0"
-chrono = "0.4.31"
 getrandom = { version = "0.2", features = ["js"] }
 gloo-utils = "0.2.0"
 hex = "0.4.3"

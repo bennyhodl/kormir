@@ -1,6 +1,6 @@
 use bitcoin::secp256k1::schnorr::Signature;
+use ddk_messages::oracle_msgs::OracleEvent;
 use diesel::prelude::*;
-use dlc_messages::oracle_msgs::OracleEvent;
 use kormir::lightning::util::ser::Readable;
 use nostr::EventId;
 use serde::{Deserialize, Serialize};

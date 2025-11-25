@@ -10,22 +10,18 @@ homepage = "https://github.com/bennyhodl/kormir"
 repository = "https://github.com/bennyhodl/kormir"
 
 [dependencies]
-kormir = { path = "../kormir", version = "0.4.2", features = ["nostr"] }
+kormir = { version = "1.0.8", features = ["nostr"] }
+ddk-messages = { version = "1.0.8", features = ["use-serde"] }
 
 anyhow = "1.0"
 axum = "0.7.9"
 http-body-util = "0.1.0"
-hyper = "1.5.2"
-tower = "0.5.2"
 tower-http = { version = "0.6.2", features = ["timeout", "trace","map-request-body", "util"] }
 bitcoin = { version = "0.32.2", features = ["serde"] }
 chrono = { version = "0.4.26", features = ["serde"] }
 diesel = { version = "2.1", features = ["postgres", "r2d2", "chrono", "numeric"] }
 diesel_migrations = "2.1.0"
-dlc-messages = { version = "0.7.1", features = [ "use-serde"] }
-# dlc-messages = { version = "0.7.0", path = "../../rust-dlc/dlc-messages", features = [ "use-serde"] }
 dotenv = "0.15.0"
-futures = "0.3.28"
 log = "0.4.20"
 nostr = "0.40.0"
 nostr-sdk = "0.40.0"

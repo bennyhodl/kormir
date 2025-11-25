@@ -5,7 +5,7 @@ use axum::extract::Path;
 use axum::extract::Query;
 use axum::http::StatusCode;
 use axum::{Extension, Json};
-use dlc_messages::oracle_msgs::OracleAnnouncement;
+use ddk_messages::oracle_msgs::OracleAnnouncement;
 use kormir::storage::{OracleEventData, Storage};
 use kormir::OracleAttestation;
 use nostr::{EventId, JsonUtil};

@@ -1,4 +1,4 @@
-FROM rust:1.75 as builder
+FROM rust:1.93 as builder
 WORKDIR /app
 COPY Cargo.toml Cargo.lock ./
 COPY kormir-server ./kormir-server
